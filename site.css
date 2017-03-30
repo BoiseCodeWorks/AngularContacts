@@ -1,0 +1,12 @@
+body {
+	margin: 20px;
+}
+
+.contact {
+	display: inline-block;
+	width: 200px;
+}
+
+contact-detail {
+	display: table-row
+}
