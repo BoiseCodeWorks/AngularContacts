@@ -1,5 +1,5 @@
 (function () {
-	
+
 	var app = angular.module('contactApp');
 
 	app.component('contactDetail', {
@@ -7,27 +7,36 @@
 		controllerAs: 'cd',
 		templateUrl: 'contactDetail.html',
 		bindings: {
-			contact: '<',
-			index: '<'
-		},
-		require: {
-			parent: '^contactList'
 		}
 	});
 
-	ContactDetail.$inject = ['$http', 'storageService'];
+	ContactDetail.$inject = ['$state', '$stateParams', '$firebaseObject'];
 
-	function ContactDetail($http, storageService) {
-		
+	function ContactDetail($state, $stateParams, $firebaseObject) {
+
 		var cd = this;
+		var contactId = $stateParams.id;
 
 		cd.delete = function () {
-			cd.parent.deleteContact(cd.index);
+			cd.contact.$remove();
+			$state.go('dashboard', { category: cd.category });
 		}
 
 		cd.$onInit = function () {
-			
+
+			var ref = firebase.database().ref().child('contacts').child(contactId);
+
+			cd.contact = $firebaseObject(ref);
+
+			cd.contact.$loaded()
+				.then(function (data) {
+					cd.category = cd.contact.category;
+					console.log(cd.category);
+				})
+				.catch(function (error) {
+					console.error("Error:", error);
+				});
 		}
 	}
-	
+
 })();
