@@ -8,24 +8,21 @@
 		templateUrl: 'contactList.html'
 	});
 
-	ContactList.$inject = ['$firebaseArray', '$stateParams'];
+	app.controller('addContactModalController', AddContactModalController);
 
-	function ContactList($firebaseArray, $stateParams) {
+	ContactList.$inject = ['$firebaseArray', '$stateParams', '$uibModal'];
+	AddContactModalController.$inject = ['$uibModalInstance'];
+
+	function ContactList($firebaseArray, $stateParams, $uibModal) {
 
 		var cl = this;
 
-		cl.newContact = {
-			firstName: '',
-			lastName: '',
-			phone: ''
-		};
-
 		cl.$onInit = function () {
 
-			cl.category = $stateParams.category || 'Family';
-			
+			cl.category = $stateParams.category || 'All';
+
 			var ref = null;
-				
+
 			if (cl.category === 'All') {
 				ref = firebase.database().ref().child('contacts');
 			}
@@ -34,7 +31,7 @@
 					.orderByChild('category')
 					.equalTo(cl.category);
 			}
-			
+
 			cl.contacts = $firebaseArray(ref);
 
 			console.log($stateParams);
@@ -42,16 +39,24 @@
 
 		cl.addContact = function () {
 
-			if (cl.newContact.firstName) {
+			var modal = $uibModal.open({
+				controller: 'addContactModalController',
+				controllerAs: 'cmc',
+				templateUrl: 'addContactModal.html'
+			});
 
-				cl.newContact.category = cl.category;
-				
-				cl.contacts.$add(angular.copy(cl.newContact));
+			modal.result.then(
+				function (newContact) {
 
-				cl.newContact.firstName = '';
-				cl.newContact.lastName = '';
-				cl.newContact.phone = '';
-			}
+					newContact.category = cl.category;
+
+					cl.contacts.$add(angular.copy(newContact));
+				},
+				function () {
+					// canceled
+				}
+			);
+
 		}
 
 		cl.deleteContact = function (index) {
@@ -59,6 +64,43 @@
 			var contact = cl.contacts[index];
 
 			cl.contacts.$remove(contact);
+		}
+	}
+
+	function AddContactModalController($uibModalInstance) {
+
+		var cmc = this;
+
+		cmc.errors = [];		
+		cmc.newContact = {
+			firstName: '',
+			lastName: '',
+			phone: ''
+		};
+
+		cmc.ok = function () {
+			if (validate()) {
+				$uibModalInstance.close(cmc.newContact);
+			}	
+		};
+
+		cmc.cancel = function () {
+			$uibModalInstance.dismiss();
+		};
+
+		function validate() {
+
+			cmc.errors = [];
+			
+			if (!cmc.newContact.firstName) {
+				cmc.errors.push('A first name is required.');
+			}			
+
+			if (!cmc.newContact.phone) {
+				cmc.errors.push('A phone number is required.');
+			}
+			
+			return cmc.errors.length === 0;
 		}
 	}
 

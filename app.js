@@ -1,5 +1,5 @@
 (function () {
-	var app = angular.module('contactApp', ['ui.router', 'firebase']);
+	var app = angular.module('contactApp', ['ui.router', 'firebase', 'ui.bootstrap']);
 
 	app.config(RouteConfiguration);
 
